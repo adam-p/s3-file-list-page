@@ -1,6 +1,12 @@
 # S3 File List Page #
 
-## Problem ##
+## Demo ##
+
+You can see this code in action here: 
+[http://www.provensecuritysolutions.com/ciphershare/](http://www.provensecuritysolutions.com/ciphershare/)
+
+
+## The Problem ##
 
 This mini-project was born when I moved [a site](http://www.provensecuritysolutions.com) from standard GoDaddy hosting to Amazon S3's static site hosting. The site has a couple of directories of downloads that it had been directly browsable using `.htaccess` permissions. But that ability was lost with S3.
 
@@ -8,7 +14,7 @@ When looking for a solution to this problem, [I found that it's possible](https:
 
 After much cross-domain failure I hit on the idea of using an `iframe` that is loaded directly from the bucket, so it's in the same domain as the S3 REST call we ultimately want to do.
 
-## Solution ##
+## A Solution ##
 
 In this project you'll find two files: `index.html` and `s3_file_list_iframe.html`. The former loads the latter into an `iframe`. Because the `iframe` source is from the same domain as the 
 
