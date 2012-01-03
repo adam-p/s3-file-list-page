@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<!-- 
+Copyright (c) 2012 Adam Pritchard
+Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+
+https://bitbucket.org/adamp/s3-file-list-page
+
+Note that this page must be loaded directly from the s3 bucket domain, like 
+this: 
+  http://www.domainname.com.s3.amazon.com/path/s3_file_listing_iframe.html
+...otherwise cross-domain rules will prevent it from obtaining the file listing.
+
+The intended use for this file is as the source for an iframe. It will allow
+a file listing on a S3 static site web page that would otherwise be disallowed
+by cross-domain browser rules.
+-->
+
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>File listing</title>
+
+    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://jstree.googlecode.com/svn/trunk/jquery.jstree.js"></script>    
+
+    <script>
+      var bucket_url = window.location.protocol + '//' + window.location.hostname;
+      var current_dir = window.location.pathname.split('/').slice(1, -1).join('/');
+      var prefix = current_dir + '/';
+
+      $(window).load(function() { 
+        if (bucket_url.indexOf('.s3.amazonaws.com') < 0) {
+          $('#file_listing').html('<h1>This page must be loaded via bucketname.s3.amazonaws.com or else cross-domain rules will prevent it from functioning correctly.</h1>');
+          return;
+        }
+
+        $.get(
+          bucket_url + '/?prefix=' + prefix,
+          function(data) {
+            buildTree($(data).find('Contents'), $('#file_listing'));
+          }
+        );
+      });
+
+      function buildTree(contents, $container)
+      {
+        // Assumption: in the contents array, directories (nodes) always come before files (leafs).
+        // Therefore: the first item in the array is the root.
+
+        // There may be a query parameter indicating a filename that should be
+        // ignored. We'll assume that, if it's present, it's the only query
+        // parameter.
+        var ignore_key = null;
+        var IGNORE = '?ignore=';
+        var ignore_idx = window.location.search.indexOf(IGNORE);
+        if (ignore_idx >= 0) {
+          ignore_key = window.location.search.slice(ignore_idx+IGNORE.length);
+        }
+
+        // Clear the container
+        $container.html('');
+
+        // Insert the tree stucture into the container as nested lists.
+        
+        // Insert the root elements.
+        var $topmost_ul = $('<ul>'); 
+        $topmost_ul.append($('<li id="jstreeroot"><a href="#">'+$(contents[0]).find('Key').text()+'</a></li>'));
+        var $root_ul = $('<ul>'); 
+        $topmost_ul.find('li').append($root_ul);
+        
+        // Move this below the loop if you don't want to see the tree
+        // appear piecemeal.
+        $container.append($topmost_ul); 
+
+        // Start from 1 to skip the root item.
+        for (var i = 1; i < contents.length; i++) {
+          var key = $(contents[i]).find('Key').text();
+
+          // Skip this page and the "ignore" page.
+          if (key === window.location.pathname.slice(1)
+              || key === prefix+ignore_key) {
+            continue;
+          }
+
+          // Some behaviour is different depending on whether the item is a 
+          // node (directory, so expand) or leaf (file, so download).
+          var click_action = '';
+          var is_dir = /^(.*)\/$/.exec(key); // dirs end with /
+          if (is_dir) {
+            // strip trailing /
+            key = key.slice(0, -1); 
+            // the action will be to toggle the node expand state
+            click_action = 'href="javascript:void(0)" onclick="toggle_node(this.parentNode, \''+$container.prop('id')+'\')"';
+          }
+          else {
+            // the action will be to download the file 
+            click_action = 'href="/'+key+'"';
+          }
+
+          // Strip the current directory and slash from the key.
+          key = key.slice(current_dir.length+1);
+
+          // Find parent node
+
+          var parent_key = slugify(key.split('/').slice(0, -1).join('/'));
+          var $parent = parent_key.length ? $root_ul.find('#'+parent_key+' > ul') : $root_ul;
+
+          // Append new node to parent
+
+          var $new_node = $('<li id='+slugify(key)+'><a '+click_action+'>'+key.split('/').slice(-1).join()+'</a></li>');
+          if (is_dir) $new_node.append($('<ul>'));
+
+          $parent.append($new_node);
+        }
+
+        // Convert the nested list structure into a jstree.
+        
+        $('#file_listing').jstree(
+          {
+            plugins: ['html_data', 'themeroller'],
+            core: {
+              initially_open: [$('#file_listing > ul > li').prop('id')]
+            }
+          }
+        ).bind("loaded.jstree", function() {
+          // The styling that we get by default doesn't look very good, so 
+          // we'll tweak it a bit. 
+          // The ui-state-default gives a background and border.          
+          $('a').css('background', 'transparent');
+          $('a').css('border', '0');
+          $('.jstree li').css('margin-top', '5px');          
+        });
+      }
+
+      // Toggle node expand state.
+      function toggle_node(node_elem, tree_container_id) {
+        $('#'+tree_container_id).jstree('toggle_node', node_elem);
+      }
+
+      // From: http://milesj.me/snippets/javascript/slugify
+      /**
+       * Transform text into a URL slug: spaces turned into dashes, remove non alnum
+       * @param string text
+       */
+      function slugify(text) {
+        text = text.replace(/[^-a-zA-Z0-9,&\s]+/ig, '');
+        text = text.replace(/-/gi, "_");
+        text = text.replace(/\s/gi, "-");
+        return text;
+      }
+    </script>
+
+    <style type="text/css">
+      body { font-family: "Trebuchet MS", sans-serif; margin: 50px; }
+    </style>
+  </head>
+
+  <body>
+
+    <noscript>
+      <h1>JavaScript is required for this page to function.</h1>
+    </noscript>
+
+    <h2>File listing</h2>
+
+    <div id="file_listing">
+      Loading file info...
+    </div>
+    
+  </body>
+
+</html>
