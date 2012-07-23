@@ -22,15 +22,19 @@ When `index.html` is loaded in a browser, the user will be shown an expandable t
 
 ## Usage ##
 
-`index.html` should be renamed to whatever you've configured the "Index Document" to be in your S3 website bucket. 
+1. `index.html` should be renamed to whatever you've configured the "Index Document" to be in your S3 website bucket. 
 
-Then copy the files into the directory that you'd like to provide a listing for. (And make sure the permissions on the files are set correctly -- i.e., make them publicly readable.)
+2. Copy the files into the directory that you'd like to provide a listing for. 
+
+3. Make sure that the bucket has *List* permission for *Everyone*, and that the files are publicly readable.
 
 ## Compatibility ##
 
 I've tested on Windows with Chrome, Firefox, and IE9.
 
 ## Shortcomings ##
+
+- You have to give you bucket public list permission, which might not be a great idea. See [Amazon S3 Bucket Public Access Considerations](http://aws.amazon.com/articles/5050).
 
 - JavaScript is required. There's just no way around it. So no graceful degradation.
 
