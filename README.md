@@ -32,6 +32,8 @@ When `index.html` is loaded in a browser, the user will be shown an expandable t
 
 I've tested on Windows with Chrome, Firefox, and IE9.
 
+If you're trying to use *s3-file-list-page* in conjunction with [*FuseOverAmazon*](http://code.google.com/p/s3fs/wiki/FuseOverAmazon), you should look at [this (solved) issue](https://github.com/adam-p/s3-file-list-page/issues/1).
+
 ## Shortcomings ##
 
 - You have to give you bucket public list permission, which might not be a great idea. See [Amazon S3 Bucket Public Access Considerations](http://aws.amazon.com/articles/5050).
