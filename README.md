@@ -1,6 +1,6 @@
 # PLEASE NOTE: DEPRECATED
 
-This `iframe` hack is probably obviated by the introduction (2012-08-01) of [CORS support in S3](http://docs.amazonwebservices.com/AmazonS3/latest/dev/cors.html).
+This `iframe` hack is probably obviated by the introduction (2012-09-01) of [CORS support in S3](http://docs.amazonwebservices.com/AmazonS3/latest/dev/cors.html).
 As such, I don't guarantee that the demo site will remain up and running. 
 
 # S3 File List Page #
